@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DesmoPrep — SAT Math Solver</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0faa6"></script>
+<style>
+:root{--bg:#0a0a0f;--bg2:#111118;--bg3:#1a1a24;--border:#2a2a3a;--border2:#3a3a50;--text:#f0f0f8;--text2:#9090b0;--accent:#5b8def;--accent2:#3d6fd4;--green:#4ade80;--radius:14px;--radius-sm:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif}
+.app{display:grid;grid-template-columns:340px 1fr;grid-template-rows:56px 1fr;height:100vh}
+.topbar{grid-column:1/-1;display:flex;align-items:center;padding:0 1.5rem;border-bottom:1px solid var(--border);background:var(--bg);gap:1rem}
+.logo{font-size:20px;font-weight:600;letter-spacing:-.3px}
+.logo .d{color:var(--accent)}.logo .p{color:var(--green)}
+.badge{background:#1a2a1a;color:var(--green);font-size:11px;padding:3px 8px;border-radius:20px;border:1px solid #2a4a2a}
+.topbar-sub{font-size:13px;color:var(--text2);margin-left:auto}
+.left{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--bg2)}
+.panel-title{padding:1rem 1.25rem .75rem;font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border)}
+.messages{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem;scroll-behavior:smooth}
+.messages::-webkit-scrollbar{width:4px}
+.messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.msg{max-width:90%;padding:.7rem 1rem;border-radius:12px;font-size:14px;line-height:1.6;animation:fadeUp .25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{background:var(--accent2);color:#fff;align-self:flex-end;border-radius:12px 12px 4px 12px}
+.msg.ai{background:var(--bg3);color:var(--text);align-self:flex-start;border-radius:12px 12px 12px 4px;border:1px solid var(--border)}
+.msg.ai .msg-label{font-size:11px;color:var(--accent);font-weight:500;margin-bottom:4px}
+.typing{display:flex;gap:4px;align-items:center}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--text2);animation:bounce 1.2s infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.chat-input-wrap{padding:.75rem 1rem;border-top:1px solid var(--border);display:flex;gap:.5rem;align-items:flex-end}
+.chat-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.6rem .875rem;color:var(--text);font-family:inherit;font-size:14px;resize:none;min-height:40px;max-height:120px;outline:none;transition:border .2s}
+.chat-input:focus{border-color:var(--accent)}
+.chat-input::placeholder{color:var(--text2)}
+.send-btn{background:var(--accent);border:none;border-radius:var(--radius-sm);width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.send-btn:hover{background:var(--accent2)}
+.send-btn svg{width:16px;height:16px;fill:#fff}
+.right{display:flex;flex-direction:column;overflow:hidden}
+.right-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2)}
+.tab{padding:0 1.25rem;height:44px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;user-select:none}
+.tab:hover{color:var(--text)}.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.right-content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.solver{flex:1;display:flex;flex-direction:column;overflow-y:auto}
+.upload-area{margin:1.5rem;border:2px dashed var(--border2);border-radius:var(--radius);padding:2.5rem 2rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg2);position:relative}
+.upload-area:hover{border-color:var(--accent);background:#0d1a2e}
+.upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-icon{font-size:40px;margin-bottom:12px}
+.upload-title{font-size:16px;font-weight:500;margin-bottom:6px}
+.upload-hint{font-size:13px;color:var(--text2)}
+.img-preview{margin:0 1.5rem;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);max-height:280px;position:relative}
+.img-preview img{width:100%;max-height:280px;object-fit:contain;display:block;background:#000}
+.img-preview .clear-btn{position:absolute;top:8px;right:8px;background:#000a;border:1px solid var(--border2);color:var(--text);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:inherit}
+.solve-btn{margin:1rem 1.5rem;background:linear-gradient(135deg,var(--accent),#7b6cf6);border:none;border-radius:var(--radius);padding:.85rem;color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .2s}
+.solve-btn:hover{opacity:.9}.solve-btn:disabled{opacity:.5;cursor:not-allowed}
+.solution{margin:0 1.5rem 1.5rem;display:flex;flex-direction:column;gap:1rem}
+.sol-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem}
+.sol-card-title{font-size:12px;font-weight:500;color:var(--accent);text-transform:uppercase;letter-spacing:.7px;margin-bottom:.75rem}
+.answer-big{font-size:32px;font-weight:600;color:var(--green);font-family:'DM Mono',monospace;letter-spacing:-1px}
+.steps-list{display:flex;flex-direction:column;gap:.6rem}
+.step{display:flex;gap:.75rem;align-items:flex-start;font-size:14px;line-height:1.6}
+.step-num{background:var(--bg3);border:1px solid var(--border2);border-radius:50%;width:22px;height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent);margin-top:2px}
+.math-inline{font-family:'DM Mono',monospace;color:var(--green);font-size:13px;background:var(--bg3);padding:1px 6px;border-radius:4px}
+.explanation-text{font-size:14px;line-height:1.7;color:var(--text)}
+.desmos-wrap{flex:1;display:flex;flex-direction:column}
+.desmos-toolbar{padding:.75rem 1.25rem;border-bottom:1px solid var(--border);display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;background:var(--bg2)}
+.desmos-toolbar label{font-size:12px;color:var(--text2);margin-right:4px}
+.desmos-input{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;width:220px;outline:none}
+.desmos-input:focus{border-color:var(--accent)}
+.plot-btn{background:var(--accent);border:none;border-radius:6px;padding:5px 14px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit}
+.clear-graph-btn{background:transparent;border:1px solid var(--border2);border-radius:6px;padding:5px 12px;color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit}
+#desmos-container{flex:1}
+.api-setup{margin:1.5rem;background:var(--bg2);border:1px solid #3a2a00;border-radius:var(--radius);padding:1.25rem}
+.api-setup-title{font-size:13px;font-weight:600;color:#fbbf24;margin-bottom:.5rem}
+.api-setup-sub{font-size:12px;color:var(--text2);margin-bottom:.75rem;line-height:1.5}
+.api-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;margin-bottom:.5rem}
+.api-save-btn{width:100%;background:#fbbf24;border:none;border-radius:6px;padding:8px 16px;color:#000;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="topbar">
+  <div class="logo"><span class="d">Desmo</span><span class="p">Prep</span></div>
+  <span class="badge">Beta</span>
+  <div class="topbar-sub">SAT Math AI Solver</div>
+</div>
+
+<div class="left">
+  <div class="panel-title">AI Tutor</div>
+  <div class="messages" id="messages">
+    <div class="msg ai"><div class="msg-label">DesmoPrep AI</div>Hi! I'm your SAT math tutor. Upload a problem on the right, or ask me anything about math here! 📐</div>
+  </div>
+  <div class="chat-input-wrap">
+    <textarea class="chat-input" id="chatInput" placeholder="Ask a math question..." rows="1"></textarea>
+    <button class="send-btn" onclick="sendChat()"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg></button>
+  </div>
+</div>
+
+<div class="right">
+  <div class="right-tabs">
+    <div class="tab active" onclick="switchTab('solver',this)">🔍 Solve</div>
+    <div class="tab" onclick="switchTab('desmos',this)">📈 Graph</div>
+  </div>
+  <div class="right-content">
+    <div id="tab-solver" class="solver">
+
+      <div class="api-setup" id="apiSetup">
+        <div class="api-setup-title">⚡ Setup — One time only!</div>
+        <div class="api-setup-sub">Enter your Cloudflare API Token (cfut_...) and Account ID</div>
+        <input class="api-input" id="cfToken" type="password" placeholder="API Token: cfut_...">
+        <input class="api-input" id="cfAccount" type="text" placeholder="Account ID: 740730c...">
+        <button class="api-save-btn" onclick="saveApiKey()">Save & Start ✓</button>
+      </div>
+
+      <div class="upload-area" id="uploadArea">
+        <input type="file" id="fileInput" accept="image/*" onchange="handleFile(event)">
+        <div class="upload-icon">📸</div>
+        <div class="upload-title">Upload your SAT problem</div>
+        <div class="upload-hint">Take a photo or screenshot — any math problem works</div>
+      </div>
+      <div class="img-preview" id="imgPreview" style="display:none">
+        <img id="previewImg" src="" alt="Problem">
+        <button class="clear-btn" onclick="clearImage()">✕ Clear</button>
+      </div>
+      <button class="solve-btn" id="solveBtn" onclick="solveImage()" style="display:none">✦ Solve with AI</button>
+      <div class="solution" id="solution" style="display:none"></div>
+      <div id="emptyState" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;color:var(--text2)">
+        <div style="font-size:48px;opacity:.3;margin-bottom:.5rem">🧮</div>
+        <div style="font-size:15px">No problem uploaded yet</div>
+        <div style="font-size:13px;opacity:.7">Upload a photo to get started</div>
+      </div>
+    </div>
+
+    <div id="tab-desmos" class="desmos-wrap" style="display:none">
+      <div class="desmos-toolbar">
+        <label>Expression:</label>
+        <input class="desmos-input" id="exprInput" placeholder="e.g. y = 2x + 3" onkeydown="if(event.key==='Enter')plotExpr()">
+        <button class="plot-btn" onclick="plotExpr()">Plot</button>
+        <button class="clear-graph-btn" onclick="clearGraph()">Clear</button>
+      </div>
+      <div id="desmos-container"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const ACCOUNT_ID = '740730c653ef888a77ba2360985b466e';
+let CF_TOKEN = localStorage.getItem('dp_cf_token') || '';
+let calculator = null;
+let currentImage = null;
+let currentMime = null;
+const chatHistory = [];
+
+if(CF_TOKEN) document.getElementById('apiSetup').style.display='none';
+document.getElementById('cfAccount').value = ACCOUNT_ID;
+
+function saveApiKey(){
+  const token = document.getElementById('cfToken').value.trim();
+  if(!token) return alert('Please enter your API token!');
+  CF_TOKEN = token;
+  localStorage.setItem('dp_cf_token', token);
+  document.getElementById('apiSetup').style.display='none';
+  addMessage('ai','Ready! Upload a SAT math problem and I\'ll solve it step-by-step. 🎯');
+}
+
+function switchTab(tab,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-solver').style.display=tab==='solver'?'flex':'none';
+  document.getElementById('tab-desmos').style.display=tab==='desmos'?'flex':'none';
+  if(tab==='desmos'&&!calculator)initDesmos();
+}
+
+function initDesmos(){
+  calculator=Desmos.GraphingCalculator(document.getElementById('desmos-container'),{keypad:false,settingsMenu:false,zoomButtons:true});
+}
+
+function plotExpr(){
+  if(!calculator)initDesmos();
+  const raw=document.getElementById('exprInput').value.trim();
+  if(!raw)return;
+  const latex=raw.replace(/\*\*/g,'^').replace(/sqrt\(([^)]+)\)/g,'\\sqrt{$1}').replace(/\*/g,'\\cdot ').replace(/pi/gi,'\\pi');
+  const colors=['#5b8def','#4ade80','#f472b6','#fb923c','#a78bfa'];
+  calculator.setExpression({id:'e'+Date.now(),latex,color:colors[Math.floor(Math.random()*colors.length)]});
+  document.getElementById('exprInput').value='';
+}
+
+function clearGraph(){if(calculator)calculator.setBlank();}
+
+function plotLatex(latex){
+  if(!calculator)initDesmos();
+  const colors=['#5b8def','#4ade80','#f472b6','#fb923c'];
+  calculator.setExpression({id:'a'+Date.now(),latex,color:colors[Math.floor(Math.random()*colors.length)]});
+}
+
+function handleFile(e){const f=e.target.files[0];if(f)loadFile(f);}
+
+function loadFile(file){
+  currentMime=file.type;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    currentImage=e.target.result;
+    document.getElementById('previewImg').src=e.target.result;
+    document.getElementById('imgPreview').style.display='block';
+    document.getElementById('uploadArea').style.display='none';
+    document.getElementById('solveBtn').style.display='block';
+    document.getElementById('emptyState').style.display='none';
+    document.getElementById('solution').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+
+const ua=document.getElementById('uploadArea');
+ua.addEventListener('dragover',e=>{e.preventDefault();ua.style.borderColor='var(--accent)';});
+ua.addEventListener('dragleave',()=>ua.style.borderColor='');
+ua.addEventListener('drop',e=>{e.preventDefault();ua.style.borderColor='';const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))loadFile(f);});
+
+function clearImage(){
+  currentImage=null;
+  document.getElementById('imgPreview').style.display='none';
+  document.getElementById('uploadArea').style.display='block';
+  document.getElementById('solveBtn').style.display='none';
+  document.getElementById('solution').style.display='none';
+  document.getElementById('emptyState').style.display='flex';
+  document.getElementById('fileInput').value='';
+}
+
+async function solveImage(){
+  if(!currentImage)return;
+  if(!CF_TOKEN){document.getElementById('apiSetup').style.display='block';return;}
+  const btn=document.getElementById('solveBtn');
+  btn.disabled=true;btn.textContent='⏳ Analyzing...';
+
+  const prompt=`You are DesmoPrep, an expert SAT math tutor. Analyze this math problem image and solve it.
+Respond ONLY in this exact JSON format (no markdown, no code blocks):
+{
+  "problem": "brief description of what is asked",
+  "answer": "the final answer",
+  "steps": ["Step 1: description", "Step 2: description", "Step 3: description"],
+  "explanation": "1-2 sentence key concept",
+  "desmos_expressions": ["latex1"],
+  "desmos_note": "what graph shows or null"
+}`;
+
+  try{
+    const resp=await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/ai/run/@cf/meta/llama-3.2-11b-vision-instruct`,{
+      method:'POST',
+      headers:{
+        'Authorization':`Bearer ${CF_TOKEN}`,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        messages:[
+          {role:'system',content:'You are DesmoPrep, an expert SAT math tutor. Always respond in valid JSON only.'},
+          {role:'user',content:[
+            {type:'image_url',image_url:{url:currentImage}},
+            {type:'text',text:prompt}
+          ]}
+        ],
+        max_tokens:1000
+      })
+    });
+
+    const data=await resp.json();
+    if(!data.success)throw new Error(data.errors?.[0]?.message||'API error');
+    let text=data.result.response;
+    text=text.replace(/```json|```/g,'').trim();
+    const start=text.indexOf('{');
+    const end=text.lastIndexOf('}');
+    if(start!==-1&&end!==-1)text=text.slice(start,end+1);
+    renderSolution(JSON.parse(text));
+  }catch(err){
+    renderError(err.message);
+  }
+  btn.disabled=false;btn.textContent='✦ Solve with AI';
+}
+
+function renderSolution(r){
+  const sol=document.getElementById('solution');
+  sol.style.display='flex';
+  const steps=(r.steps||[]).map((s,i)=>`<div class="step"><div class="step-num">${i+1}</div><div class="step-text">${s}</div></div>`).join('');
+  const hasD=r.desmos_expressions&&r.desmos_expressions.length>0;
+  sol.innerHTML=`
+    <div class="sol-card"><div class="sol-card-title">✅ Final Answer</div><div class="answer-big">${r.answer||'See steps'}</div><div style="font-size:13px;color:var(--text2);margin-top:6px">${r.problem||''}</div></div>
+    <div class="sol-card"><div class="sol-card-title">📝 Step-by-Step</div><div class="steps-list">${steps}</div></div>
+    <div class="sol-card"><div class="sol-card-title">💡 Key Concept</div><div class="explanation-text">${r.explanation||''}</div></div>
+    ${hasD?`<div class="sol-card" style="border-color:#2a3a2a"><div class="sol-card-title" style="color:var(--green)">📈 Desmos</div><div class="explanation-text" style="margin-bottom:.75rem">${r.desmos_note||'Graph:'}</div><button class="solve-btn" style="margin:0;padding:.6rem 1rem;font-size:13px" onclick='plotSolution(${JSON.stringify(r.desmos_expressions)})'>📈 Open in Graph</button></div>`:''}`;
+  addMessage('ai',`✅ Answer: **${r.answer}**. ${hasD?'Click "Open in Graph"!':'Ask me anything!'}`);
+}
+
+function renderError(msg){
+  const sol=document.getElementById('solution');
+  sol.style.display='flex';
+  sol.innerHTML=`<div class="sol-card"><div class="sol-card-title">⚠️ Error</div><div class="explanation-text" style="color:#f87171">${msg}</div></div>`;
+}
+
+function plotSolution(exprs){
+  switchTab('desmos',document.querySelectorAll('.tab')[1]);
+  if(!calculator)initDesmos();
+  setTimeout(()=>exprs.forEach(e=>plotLatex(e)),300);
+}
+
+function addMessage(role,text){
+  const c=document.getElementById('messages');
+  const d=document.createElement('div');
+  d.className=`msg ${role}`;
+  d.innerHTML=role==='ai'?`<div class="msg-label">DesmoPrep AI</div>${text.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')}`:text;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+
+function showTyping(){
+  const c=document.getElementById('messages');
+  const d=document.createElement('div');
+  d.className='msg ai';d.id='typing';
+  d.innerHTML='<div class="msg-label">DesmoPrep AI</div><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function removeTyping(){const e=document.getElementById('typing');if(e)e.remove();}
+
+async function sendChat(){
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();
+  if(!text)return;
+  if(!CF_TOKEN){document.getElementById('apiSetup').style.display='block';return;}
+  addMessage('user',text);
+  input.value='';input.style.height='auto';
+  chatHistory.push({role:'user',content:text});
+  showTyping();
+  try{
+    const messages=[
+      {role:'system',content:'You are DesmoPrep, a brilliant SAT math tutor. Be concise and clear. Solve step by step. When a graph helps, end with GRAPH: [latex expression].'},
+      ...chatHistory
+    ];
+    const resp=await fetch(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/ai/run/@cf/meta/llama-3.1-8b-instruct`,{
+      method:'POST',
+      headers:{'Authorization':`Bearer ${CF_TOKEN}`,'Content-Type':'application/json'},
+      body:JSON.stringify({messages,max_tokens:600})
+    });
+    const data=await resp.json();
+    if(!data.success)throw new Error(data.errors?.[0]?.message||'API error');
+    const reply=data.result.response;
+    removeTyping();
+    chatHistory.push({role:'assistant',content:reply});
+    addMessage('ai',reply);
+    const gm=reply.match(/GRAPH:\s*([^\n]+)/i);
+    if(gm)setTimeout(()=>{document.getElementById('exprInput').value=gm[1].trim();},500);
+  }catch(err){
+    removeTyping();
+    addMessage('ai',`Error: ${err.message}`);
+  }
+}
+
+document.getElementById('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}});
+document.getElementById('chatInput').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';});
+</script>
+</body>
+</html>
